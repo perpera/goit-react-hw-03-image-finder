@@ -175,6 +175,11 @@ img {
   max-height: calc(100vh - 24px);
 }
 
+.Overlay img {
+  max-width: calc(100vw - 248px);
+  max-height: calc(100vh - 224px);
+}
+
 /*
 * Стили компонента Buton (Load more)
 */

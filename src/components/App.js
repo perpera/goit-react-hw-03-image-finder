@@ -12,6 +12,7 @@ export class App extends Component {
     page: 1,
     query: '',
     isLoading: false,
+    loadMore: false,
   };
 
   componentDidUpdate(prevProps, prevState) {
@@ -23,50 +24,71 @@ export class App extends Component {
     }
   }
 
-  fetchImageData = async () => {
-    const { query, page } = this.state;
+  fetchImageData = async page => {
+    const { query } = this.state;
 
     try {
       this.setState({ isLoading: true });
       const imageData = await fetchImages(query, page);
 
       if (page === 1) {
-        this.setState({ images: imageData });
+        this.setState({ images: imageData, totalHits: imageData.length });
       } else if (imageData.length > 0) {
         this.setState(prevState => ({
           images: [...prevState.images, ...imageData],
+          loadMore: imageData.length < 12,
         }));
       } else {
         toast.error('There are no more images');
+        this.setState({ loadMore: true });
       }
     } catch (error) {
-      toast.error('Falied to fetch images. Please try again.');
+      toast.error('Failed to fetch images. Please try again.');
     } finally {
       this.setState({ isLoading: false });
     }
   };
 
   handleSubmit = newQuery => {
+    if (newQuery.trim() === '') {
+      toast.error('Can not be empty');
+      return;
+    }
+
     this.setState({
       query: newQuery,
+      images: [],
       page: 1,
     });
   };
 
   loadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
+    const { loadMore } = this.state;
+
+    if (!loadMore) {
+      this.setState(
+        prevState => ({
+          page: prevState.page + 1,
+        }),
+        () => {
+          this.fetchImageData(this.state.page);
+        }
+      );
+    } else {
+      toast.error('There are no more images');
+    }
   };
 
   render() {
-    const { images, isLoading } = this.state;
+    const { loadMore, images, isLoading } = this.state;
 
     return (
       <div className="App">
         <Searchbar onSubmit={this.handleSubmit} />
         <ImageGallery items={images} />
-        {images.length > 0 && !isLoading && <Button onClick={this.loadMore} />}
+        {images.length > 0 && !isLoading && !loadMore && (
+          <Button onClick={this.loadMore} disabled={!this.state.loadMore} />
+        )}
         {isLoading && <Loader />}
         <Toaster />
       </div>

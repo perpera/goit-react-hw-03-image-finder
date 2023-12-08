@@ -18,20 +18,28 @@ export class Modal extends Component {
     }
   };
 
+  handleClick = event => {
+    if (event.target.className === 'Overlay') {
+      this.props.onClose();
+    }
+  };
+
   render() {
     const { isOpen, onClose, item } = this.props;
 
     return (
-      <div className="Overlay" onClick={onClose}>
-        <ReactModal
-          className="Modal"
-          isOpen={isOpen}
-          onRequestClose={onClose}
-          contentLabel="Modal"
-        >
+      <ReactModal
+        className="Modal"
+        isOpen={isOpen}
+        onRequestClose={onClose}
+        contentLabel="Modal"
+      >
+        (
+        <div className="Overlay" onClick={this.handleClick}>
           <img src={item.largeImageURL} alt="largeImage" />
-        </ReactModal>
-      </div>
+        </div>
+        )
+      </ReactModal>
     );
   }
 }
