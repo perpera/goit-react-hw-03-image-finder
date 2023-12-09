@@ -24,24 +24,20 @@ export class App extends Component {
     }
   }
 
-  fetchImageData = async page => {
-    const { query } = this.state;
+  fetchImageData = async () => {
+    const { query, page } = this.state;
 
     try {
       this.setState({ isLoading: true });
-      const imageData = await fetchImages(query, page);
-
-      if (page === 1) {
-        this.setState({ images: imageData, totalHits: imageData.length });
-      } else if (imageData.length > 0) {
-        this.setState(prevState => ({
-          images: [...prevState.images, ...imageData],
-          loadMore: imageData.length < 12,
-        }));
-      } else {
-        toast.error('There are no more images');
-        this.setState({ loadMore: true });
+      const { hits, totalHits } = await fetchImages(query, page);
+      if (hits.length === 0) {
+        return toast.error('No images found.');
       }
+
+      this.setState(prevState => ({
+        images: [...prevState.images, ...hits],
+        loadMore: page < Math.ceil(totalHits / 12),
+      }));
     } catch (error) {
       toast.error('Failed to fetch images. Please try again.');
     } finally {
@@ -63,20 +59,7 @@ export class App extends Component {
   };
 
   loadMore = () => {
-    const { loadMore } = this.state;
-
-    if (!loadMore) {
-      this.setState(
-        prevState => ({
-          page: prevState.page + 1,
-        }),
-        () => {
-          this.fetchImageData(this.state.page);
-        }
-      );
-    } else {
-      toast.error('There are no more images');
-    }
+    this.setState(prevState => ({ page: prevState.page + 1 }));
   };
 
   render() {
@@ -85,9 +68,10 @@ export class App extends Component {
     return (
       <div className="App">
         <Searchbar onSubmit={this.handleSubmit} />
-        <ImageGallery items={images} />
-        {images.length > 0 && !isLoading && !loadMore && (
-          <Button onClick={this.loadMore} disabled={!this.state.loadMore} />
+        {images.length > 0 && <ImageGallery items={images} />}
+
+        {loadMore && !isLoading && images.length > 0 && (
+          <Button onClick={this.loadMore} />
         )}
         {isLoading && <Loader />}
         <Toaster />

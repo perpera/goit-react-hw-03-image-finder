@@ -21,7 +21,7 @@ export const fetchImages = async (query, page) => {
       toast.error('No images found. Please try again.');
     }
 
-    return response.data.hits;
+    return response.data;
   } catch (error) {
     toast.error(
       'An error occured while fetching data. Please try again later.'
